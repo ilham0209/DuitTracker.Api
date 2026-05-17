@@ -4,21 +4,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DuitTracker.Api.Features.Categories;
 
-public static class DeleteCategory
+public record DeleteCategoryCommand(Guid Id) : IRequest;
+
+public class DeleteCategoryHandler(DuitDbContext db) : IRequestHandler<DeleteCategoryCommand>
 {
-    public record Command(Guid Id) : IRequest<bool>;
-
-    public class Handler(DuitDbContext context) : IRequestHandler<Command, bool>
+    public async Task Handle(DeleteCategoryCommand request, CancellationToken ct)
     {
-        public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
-        {
-            var entity = await context.Categories.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-            if (entity is null) return false;
+        var category = await db.Categories
+            .FirstOrDefaultAsync(x => x.Id == request.Id, ct)
+            ?? throw new KeyNotFoundException($"Category with ID {request.Id} not found.");
 
-            entity.SetDeleted();
-            await context.SaveChangesAsync(cancellationToken);
+        category.SetDeleted();
+        category.SetModified("system");
 
-            return true;
-        }
+        await db.SaveChangesAsync(ct);
     }
 }
