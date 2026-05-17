@@ -13,17 +13,17 @@ public class BaseClass
         IsDeleted = false;
     }
 
-public void SetCreated(string user)
-{
-    SysUserCreated = user;
-    SysDateCreated = DateTime.UtcNow;
-}
+    public void SetCreated(string user)
+    {
+        SysUserCreated = user;
+        SysDateCreated = DateTime.UtcNow;
+    }
 
-public void SetModified(string user)
-{
-    SysUserModified = user;
-    SysDateModified = DateTime.UtcNow;
-}
+    public void SetModified(string user)
+    {
+        SysUserModified = user;
+        SysDateModified = DateTime.UtcNow;
+    }
 
     public void SetDeleted()
     {

@@ -19,6 +19,12 @@ public class GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<Glo
             var errors = ex.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
             await context.Response.WriteAsync(JsonSerializer.Serialize(new { errors }));
         }
+        catch (KeyNotFoundException ex)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(new { error = ex.Message }));
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception");

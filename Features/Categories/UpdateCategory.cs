@@ -5,44 +5,39 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DuitTracker.Api.Features.Categories;
 
-public static class UpdateCategory
+public record EditCategoryCommand(Guid Id, string Name, string Icon, string Color, string Type) : IRequest<EditCategoryResponse>;
+
+public class EditCategoryValidator : AbstractValidator<EditCategoryCommand>
 {
-    public record Command(Guid Id, string Name, string Icon, string Type) : IRequest<Response?>;
-    public record Response(Guid Id, string Name, string Icon, string Type);
-
-    public class Validator : AbstractValidator<Command>
+    public EditCategoryValidator()
     {
-        public Validator()
-        {
-            RuleFor(x => x.Name).NotEmpty().MaximumLength(100).WithMessage("Name is required");
-            RuleFor(x => x.Icon).NotEmpty().WithMessage("Icon is required");
-            RuleFor(x => x.Type).NotEmpty().Must(x => x == "Income" || x == "Expense").WithMessage("Type must be Income or Expense");
-        }
+        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Icon).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.Color).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.Type).NotEmpty().Must(t => t == "Income" || t == "Expense")
+            .WithMessage("Type must be 'Income' or 'Expense'.");
     }
+}
 
-    public class Handler(DuitDbContext context, IHttpContextAccessor httpContextAccessor) : IRequestHandler<Command, Response?>
+public record EditCategoryResponse(Guid Id, string Name, string Icon, string Color, string Type);
+
+public class EditCategoryHandler(DuitDbContext db) : IRequestHandler<EditCategoryCommand, EditCategoryResponse>
+{
+    public async Task<EditCategoryResponse> Handle(EditCategoryCommand request, CancellationToken ct)
     {
-        private readonly IValidator<Command> _validator = new Validator();
+        var category = await db.Categories
+            .FirstOrDefaultAsync(x => x.Id == request.Id, ct)
+            ?? throw new KeyNotFoundException($"Category with ID {request.Id} not found.");
 
-        public async Task<Response?> Handle(Command request, CancellationToken cancellationToken)
-        {
-            var validationResult = await _validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid)
-                throw new ValidationException(validationResult.Errors);
+        category.Name = request.Name;
+        category.Icon = request.Icon;
+        category.Color = request.Color;
+        category.Type = request.Type;
+        category.SetModified("system");
 
-            var entity = await context.Categories.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-            if (entity is null) return null;
+        await db.SaveChangesAsync(ct);
 
-            var user = httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "System";
-
-            entity.Name = request.Name;
-            entity.Icon = request.Icon;
-            entity.Type = request.Type;
-            entity.SetModified(user);
-
-            await context.SaveChangesAsync(cancellationToken);
-
-            return new Response(entity.Id, entity.Name, entity.Icon, entity.Type);
-        }
+        return new EditCategoryResponse(category.Id, category.Name, category.Icon, category.Color, category.Type);
     }
 }
