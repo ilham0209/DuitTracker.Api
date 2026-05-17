@@ -9,6 +9,7 @@ public class DuitDbContext(DbContextOptions<DuitDbContext> options) : DbContext(
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<PaymentMethod> PaymentMethods => Set<PaymentMethod>();
     public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +75,19 @@ public class DuitDbContext(DbContextOptions<DuitDbContext> options) : DbContext(
             e.Property(x => x.Amount).IsRequired().HasColumnType("numeric(18,2)");
             e.Property(x => x.Month).IsRequired();
             e.Property(x => x.Year).IsRequired();
+            e.Property(x => x.SysUserCreated).HasMaxLength(100);
+            e.Property(x => x.SysUserModified).HasMaxLength(100);
+            e.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<User>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.FullName).IsRequired().HasMaxLength(150);
+            e.Property(x => x.Email).IsRequired().HasMaxLength(150);
+            e.HasIndex(x => x.Email).IsUnique();
+            e.Property(x => x.PasswordHash).IsRequired().HasMaxLength(500);
+            e.Property(x => x.Role).IsRequired().HasMaxLength(20);
             e.Property(x => x.SysUserCreated).HasMaxLength(100);
             e.Property(x => x.SysUserModified).HasMaxLength(100);
             e.HasQueryFilter(x => !x.IsDeleted);
