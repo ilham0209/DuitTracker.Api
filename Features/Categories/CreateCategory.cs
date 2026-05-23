@@ -1,5 +1,6 @@
 using DuitTracker.Api.Shared.Domain;
 using DuitTracker.Api.Shared.Infrastructure.Persistence;
+using DuitTracker.Api.Shared.Services;
 using FluentValidation;
 using MediatR;
 
@@ -21,21 +22,21 @@ public class CreateCategoryValidator : AbstractValidator<CreateCategoryCommand>
 
 public record CreateCategoryResponse(Guid Id, string Name, string Icon, string Color, string Type);
 
-public class CreateCategoryHandler(DuitDbContext db) : IRequestHandler<CreateCategoryCommand, CreateCategoryResponse>
+public class CreateCategoryHandler(DuitDbContext db, ICurrentUserService currentUser) : IRequestHandler<CreateCategoryCommand, CreateCategoryResponse>
 {
     public async Task<CreateCategoryResponse> Handle(CreateCategoryCommand request, CancellationToken ct)
     {
         var category = new Category
         {
             Id = Guid.NewGuid(),
-            UserId = Guid.Empty,
+            UserId = currentUser.UserId,
             Name = request.Name,
             Icon = request.Icon,
             Color = request.Color,
             Type = request.Type
         };
 
-        category.SetCreated("system");
+        category.SetCreated(currentUser.Email);
 
         db.Categories.Add(category);
         await db.SaveChangesAsync(ct);

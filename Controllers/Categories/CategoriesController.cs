@@ -1,9 +1,11 @@
 using DuitTracker.Api.Features.Categories;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DuitTracker.Api.Controllers.Categories;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController(ISender sender) : ControllerBase

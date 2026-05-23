@@ -1,4 +1,5 @@
 using DuitTracker.Api.Shared.Infrastructure.Persistence;
+using DuitTracker.Api.Shared.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,11 +16,12 @@ public record GetAllBudgetResponse(
     int Month,
     int Year);
 
-public class GetAllBudgetHandler(DuitDbContext db) : IRequestHandler<GetAllBudgetQuery, List<GetAllBudgetResponse>>
+public class GetAllBudgetHandler(DuitDbContext db, ICurrentUserService currentUser) : IRequestHandler<GetAllBudgetQuery, List<GetAllBudgetResponse>>
 {
     public async Task<List<GetAllBudgetResponse>> Handle(GetAllBudgetQuery request, CancellationToken ct)
     {
         return await db.Budgets
+            .Where(x => x.UserId == currentUser.UserId)
             .Include(x => x.Category)
             .Select(x => new GetAllBudgetResponse(
                 x.Id,

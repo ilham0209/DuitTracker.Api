@@ -1,5 +1,6 @@
 using DuitTracker.Api.Shared.Domain;
 using DuitTracker.Api.Shared.Infrastructure.Persistence;
+using DuitTracker.Api.Shared.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -42,22 +43,22 @@ public record CreateTransactionResponse(
     string ReferenceNo,
     string AttachmentUrl);
 
-public class CreateTransactionHandler(DuitDbContext db) : IRequestHandler<CreateTransactionCommand, CreateTransactionResponse>
+public class CreateTransactionHandler(DuitDbContext db, ICurrentUserService currentUser) : IRequestHandler<CreateTransactionCommand, CreateTransactionResponse>
 {
     public async Task<CreateTransactionResponse> Handle(CreateTransactionCommand request, CancellationToken ct)
     {
         var category = await db.Categories
-            .FirstOrDefaultAsync(x => x.Id == request.CategoryId, ct)
+            .FirstOrDefaultAsync(x => x.Id == request.CategoryId && x.UserId == currentUser.UserId, ct)
             ?? throw new KeyNotFoundException($"Category with ID {request.CategoryId} not found.");
 
         var paymentMethod = await db.PaymentMethods
-            .FirstOrDefaultAsync(x => x.Id == request.PaymentMethodId, ct)
+            .FirstOrDefaultAsync(x => x.Id == request.PaymentMethodId && x.UserId == currentUser.UserId, ct)
             ?? throw new KeyNotFoundException($"Payment method with ID {request.PaymentMethodId} not found.");
 
         var transaction = new Transaction
         {
             Id = Guid.NewGuid(),
-            UserId = Guid.Empty,
+            UserId = currentUser.UserId,
             CategoryId = request.CategoryId,
             PaymentMethodId = request.PaymentMethodId,
             Amount = request.Amount,
@@ -67,7 +68,7 @@ public class CreateTransactionHandler(DuitDbContext db) : IRequestHandler<Create
             AttachmentUrl = request.AttachmentUrl
         };
 
-        transaction.SetCreated("system");
+        transaction.SetCreated(currentUser.Email);
 
         db.Transactions.Add(transaction);
         await db.SaveChangesAsync(ct);

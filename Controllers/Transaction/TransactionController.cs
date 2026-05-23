@@ -1,9 +1,11 @@
 using DuitTracker.Api.Features.Transactions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DuitTracker.Api.Controllers.Transactions;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class TransactionsController(ISender sender) : ControllerBase
