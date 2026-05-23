@@ -1,9 +1,11 @@
 using DuitTracker.Api.Features.PaymentMethods;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DuitTracker.Api.Controllers.PaymentMethods;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class PaymentMethodsController(ISender sender) : ControllerBase

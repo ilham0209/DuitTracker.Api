@@ -1,4 +1,5 @@
 using DuitTracker.Api.Shared.Infrastructure.Persistence;
+using DuitTracker.Api.Shared.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,11 +20,12 @@ public record GetAllTransactionResponse(
     string ReferenceNo,
     string AttachmentUrl);
 
-public class GetAllTransactionHandler(DuitDbContext db) : IRequestHandler<GetAllTransactionQuery, List<GetAllTransactionResponse>>
+public class GetAllTransactionHandler(DuitDbContext db, ICurrentUserService currentUser) : IRequestHandler<GetAllTransactionQuery, List<GetAllTransactionResponse>>
 {
     public async Task<List<GetAllTransactionResponse>> Handle(GetAllTransactionQuery request, CancellationToken ct)
     {
         return await db.Transactions
+            .Where(x => x.UserId == currentUser.UserId)
             .Include(x => x.Category)
             .Include(x => x.PaymentMethod)
             .Select(x => new GetAllTransactionResponse(

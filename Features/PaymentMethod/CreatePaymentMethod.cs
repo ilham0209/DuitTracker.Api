@@ -1,5 +1,6 @@
 using DuitTracker.Api.Shared.Domain;
 using DuitTracker.Api.Shared.Infrastructure.Persistence;
+using DuitTracker.Api.Shared.Services;
 using FluentValidation;
 using MediatR;
 
@@ -17,18 +18,18 @@ public class CreatePaymentMethodValidator : AbstractValidator<CreatePaymentMetho
 
 public record CreatePaymentMethodResponse(Guid Id, string Name);
 
-public class CreatePaymentMethodHandler(DuitDbContext db) : IRequestHandler<CreatePaymentMethodCommand, CreatePaymentMethodResponse>
+public class CreatePaymentMethodHandler(DuitDbContext db, ICurrentUserService currentUser) : IRequestHandler<CreatePaymentMethodCommand, CreatePaymentMethodResponse>
 {
     public async Task<CreatePaymentMethodResponse> Handle(CreatePaymentMethodCommand request, CancellationToken ct)
     {
         var paymentMethod = new PaymentMethod
         {
             Id = Guid.NewGuid(),
-            UserId = Guid.Empty,
+            UserId = currentUser.UserId,
             Name = request.Name
         };
 
-        paymentMethod.SetCreated("system");
+        paymentMethod.SetCreated(currentUser.Email);
 
         db.PaymentMethods.Add(paymentMethod);
         await db.SaveChangesAsync(ct);

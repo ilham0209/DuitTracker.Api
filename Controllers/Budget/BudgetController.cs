@@ -1,9 +1,11 @@
 using DuitTracker.Api.Features.Budgets;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DuitTracker.Api.Controllers.Budgets;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class BudgetsController(ISender sender) : ControllerBase

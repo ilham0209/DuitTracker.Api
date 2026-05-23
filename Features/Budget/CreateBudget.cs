@@ -1,5 +1,6 @@
 using DuitTracker.Api.Shared.Domain;
 using DuitTracker.Api.Shared.Infrastructure.Persistence;
+using DuitTracker.Api.Shared.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -32,25 +33,25 @@ public record CreateBudgetResponse(
     int Month,
     int Year);
 
-public class CreateBudgetHandler(DuitDbContext db) : IRequestHandler<CreateBudgetCommand, CreateBudgetResponse>
+public class CreateBudgetHandler(DuitDbContext db, ICurrentUserService currentUser) : IRequestHandler<CreateBudgetCommand, CreateBudgetResponse>
 {
     public async Task<CreateBudgetResponse> Handle(CreateBudgetCommand request, CancellationToken ct)
     {
         var category = await db.Categories
-            .FirstOrDefaultAsync(x => x.Id == request.CategoryId, ct)
+            .FirstOrDefaultAsync(x => x.Id == request.CategoryId && x.UserId == currentUser.UserId, ct)
             ?? throw new KeyNotFoundException($"Category with ID {request.CategoryId} not found.");
 
         var budget = new Budget
         {
             Id = Guid.NewGuid(),
-            UserId = Guid.Empty,
+            UserId = currentUser.UserId,
             CategoryId = request.CategoryId,
             Amount = request.Amount,
             Month = request.Month,
             Year = request.Year
         };
 
-        budget.SetCreated("system");
+        budget.SetCreated(currentUser.Email);
 
         db.Budgets.Add(budget);
         await db.SaveChangesAsync(ct);
