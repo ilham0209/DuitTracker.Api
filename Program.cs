@@ -1,4 +1,5 @@
 using DuitTracker.Api.Shared.Behaviours;
+using DuitTracker.Api.Shared.Configuration;
 using DuitTracker.Api.Shared.Infrastructure.Persistence;
 using DuitTracker.Api.Shared.Middleware;
 using DuitTracker.Api.Shared.Services;
@@ -25,6 +26,9 @@ builder.Services.AddDbContext<DuitDbContext>(options =>
 
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
