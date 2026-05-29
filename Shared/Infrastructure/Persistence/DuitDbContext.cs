@@ -10,6 +10,7 @@ public class DuitDbContext(DbContextOptions<DuitDbContext> options) : DbContext(
     public DbSet<PaymentMethod> PaymentMethods => Set<PaymentMethod>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,6 +92,19 @@ public class DuitDbContext(DbContextOptions<DuitDbContext> options) : DbContext(
             e.Property(x => x.SysUserCreated).HasMaxLength(100);
             e.Property(x => x.SysUserModified).HasMaxLength(100);
             e.HasQueryFilter(x => !x.IsDeleted);
+
+            e.HasMany<PasswordResetToken>()
+                .WithOne(x => x.User)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PasswordResetToken>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Token).IsRequired().HasMaxLength(200);
+            e.HasIndex(x => x.Token).IsUnique();
+            e.Property(x => x.ExpiryDate).IsRequired();
         });
     }
 }

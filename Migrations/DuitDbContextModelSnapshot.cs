@@ -118,6 +118,39 @@ namespace DuitTracker.Api.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("DuitTracker.Api.Shared.Domain.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetTokens");
+                });
+
             modelBuilder.Entity("DuitTracker.Api.Shared.Domain.PaymentMethod", b =>
                 {
                     b.Property<Guid>("Id")
@@ -276,6 +309,17 @@ namespace DuitTracker.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("DuitTracker.Api.Shared.Domain.PasswordResetToken", b =>
+                {
+                    b.HasOne("DuitTracker.Api.Shared.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DuitTracker.Api.Shared.Domain.Transaction", b =>
