@@ -54,7 +54,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5076",
-                "https://localhost:7095")
+                "https://localhost:7095",
+                builder.Configuration["AllowedOrigins:Frontend"] ?? "")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -62,11 +63,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    var db = scope.ServiceProvider.GetRequiredService<DuitDbContext>();
+    db.Database.Migrate();
 }
+
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
