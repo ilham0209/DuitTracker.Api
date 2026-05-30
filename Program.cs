@@ -76,7 +76,13 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.MapOpenApi();
-app.MapScalarApiReference();
+app.MapScalarApiReference(options =>
+{
+    options.Servers =
+    [
+        new ScalarServer("https://duittrackerapi-production.up.railway.app")
+    ];
+});
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseCors("AllowFrontend");
